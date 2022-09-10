@@ -6,6 +6,7 @@
 
 #include "ebo.h"
 #include "shader.h"
+#include "vao.h"
 #include "vbo.h"
 
 static const GLuint WIDTH = 512;
@@ -26,12 +27,14 @@ static const GLuint HEIGHT = 512;
 /* "}\n\0"; */
 
 GLfloat vertices[] = {
-  -0.25f, 0.0f, 0.0f,
-  0.0f, 0.5f, 0.0f,
-  0.25f, 0.0f, 0.0f,
-  0.5f, -0.5f, 0.0f,
-  0.0f, -0.5f, 0.0f,
-  -0.5f, -0.5f, 0.0f
+  // First three in the row are positions
+  // Last three in the row are RGB values
+  -0.25f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+  0.0f, 0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+  0.25f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+  0.0f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f
 };
 
 GLuint indices[] = {
@@ -188,13 +191,15 @@ int main(void) {
   struct shader s = create_shader_program(vertex_shader_source, fragment_shader_source);
 
   // ordering matters for generating
-  glGenVertexArrays(1, &vao);
+  /* glGenVertexArrays(1, &vao); */
+  struct vao* vao = create_vao();
   /* glGenBuffers(1, &vbo); */
   struct vbo* v = create_vbo(vertices, sizeof(vertices)/sizeof(vertices[0]));
   /* glGenBuffers(1, &ebo); */
   struct ebo* e = create_ebo(indices, sizeof(indices)/sizeof(indices[0]));
   
-  glBindVertexArray(vao);
+  /* glBindVertexArray(vao); */
+  bind_vao(vao);
   /* glBindBuffer(GL_ARRAY_BUFFER, vbo); */
   bind_vbo(v);
   /* glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); */
@@ -205,12 +210,16 @@ int main(void) {
   /* glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); */
   buffer_ebo_data(e);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+  /* glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); */
   // only a single vertex array, so 0
-  glEnableVertexAttribArray(0);
-
+  /* glEnableVertexAttribArray(0); */
+  /* enable_vao(vao); */
+  link_vao_vbo(v, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
+  link_vao_vbo(v, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+  
   unbind_vbo();
-  glBindVertexArray(0);
+  /* glBindVertexArray(0); */
+  unbind_vao();
   /* glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); */
   unbind_ebo();
 
@@ -224,11 +233,12 @@ int main(void) {
   /* main loop */
   while(1) {
 
-    glClearColor(0.7f, 0.13f, 0.17f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     activate(&s);
-    glBindVertexArray(vao);
+    /* glBindVertexArray(vao); */
+    bind_vao(vao);
     /* glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); */
     bind_ebo(e);
     /* glDrawArrays(GL_TRIANGLES, 0, 3); */
